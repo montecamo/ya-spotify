@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  - push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install
+      - name: Generate config file
+        run: |
+          cp ./config.ts.orig ./config.ts
+      - name: Build
+        run: yarn build

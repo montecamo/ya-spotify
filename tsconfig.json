@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "module": "esnext",
+    "target": "ES2020",
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "~config": ["config.ts"],
+      "~types": ["src/types/index.ts"],
+      "~types/*": ["src/types/*"],
+      "~utils": ["src/utils/index.ts"],
+      "~utils/*": ["src/utils/*"]
+    },
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "./src/**/*",
+    "./scripts/**/*.ts"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Spotify-NowPlaying",
+  "description": "NowPlaying",
+  "version": "0.5.0",
+  "action": {},
+  "options_ui": {
+    "page": "options/index.html",
+    "open_in_tab": false
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "identity",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://accounts.spotify.com/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
