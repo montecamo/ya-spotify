@@ -1,45 +1,50 @@
-import { build } from 'esbuild';
-import TscWatchClient from 'tsc-watch/client';
+import { build } from "esbuild";
+import TscWatchClient from "tsc-watch/client";
 
-import { copyFiles } from './copy';
+import { copyFiles } from "./copy";
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isDevelopment = process.env.NODE_ENV === "development";
 
 (async () => {
   const tscWatch = new TscWatchClient();
   // Improve type checking because `tsc --watch` clears a terminal
-  isDevelopment && tscWatch.start('--noEmit');
+  isDevelopment && tscWatch.start("--noEmit");
 
-  const copyWatchers = await copyFiles({
-    'src/manifest.json': 'dist/manifest.json',
-    'src/options/index.html': 'dist/options/index.html',
-  }, isDevelopment);
+  const copyWatchers = await copyFiles(
+    {
+      "src/manifest.json": "dist/manifest.json",
+      "src/spotify.svg": "dist/spotify.svg",
+      "src/options/index.html": "dist/options/index.html",
+    },
+    isDevelopment
+  );
 
   build({
-    entryPoints: [
-      'src/background.ts',
-      'src/options/index.ts',
-    ],
-    outdir: 'dist',
+    entryPoints: ["src/background.ts", "src/options/index.ts, "src/content-script.ts"],
+    outdir: "dist",
     bundle: true,
     watch: isDevelopment && {
       onRebuild(error, result) {
         if (error) {
-          console.error('watch build failed:', error);
+          console.error("watch build failed:", error);
           return;
         }
-        console.log('watch build succeeded:', result);
+        console.log("watch build succeeded:", result);
       },
     },
     minify: !isDevelopment,
-    target: ['es2020'],
-  }).then(() => {
-    console.log('build finished' + (isDevelopment ? ', watching for changes...' : ''));
-  }).catch(() => {
-    tscWatch.kill();
-    for (const watcher of copyWatchers) {
-      watcher.close();
-    }
-    process.exit(1);
-  });
+    target: ["es2020"],
+  })
+    .then(() => {
+      console.log(
+        "build finished" + (isDevelopment ? ", watching for changes..." : "")
+      );
+    })
+    .catch(() => {
+      tscWatch.kill();
+      for (const watcher of copyWatchers) {
+        watcher.close();
+      }
+      process.exit(1);
+    });
 })();

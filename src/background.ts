@@ -1,53 +1,84 @@
-import { login, refleshAccessToken } from '~utils';
-import { SpotifyNowplayingStorage } from '~types';
+import { login, refleshAccessToken } from "~utils";
+import { SpotifyNowplayingStorage } from "~types";
 
-chrome.action.onClicked.addListener(async () => {
-  const { expiresAt } = await chrome.storage.local.get('expiresAt') as SpotifyNowplayingStorage;
+function getFromStorage(data: string): Promise<SpotifyNowplayingStorage> {
+  return new Promise((resolve) => {
+    // @ts-expect-error: ok
+    chrome.storage.local.get(data, resolve);
+  });
+}
+
+function fetchTrack(query: string, accessToken: string): Promise<any> {
+  console.warn("query", query);
+  return fetch(
+    `https://api.spotify.com/v1/search?type=track&limit=1&q=${encodeURIComponent(
+      query
+    )}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  )
+    .then((response) => response.json())
+    .then(({ tracks }) => tracks.items[0]);
+}
+
+function likeTrack(id: string, accessToken: string): Promise<any> {
+  return fetch(`https://api.spotify.com/v1/me/tracks`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      ["Content-Type"]: "application/json",
+    },
+    body: JSON.stringify({ ids: [id] }),
+  });
+}
+
+let temp: any;
+chrome.runtime.onMessage.addListener(async ({ artists, title, version }) => {
+  const { expiresAt } = (await getFromStorage(
+    "expiresAt"
+  )) as SpotifyNowplayingStorage;
 
   if (!expiresAt) {
     await login();
   }
 
   if (expiresAt < Date.now()) {
-    const { refreshToken } = await chrome.storage.local.get('refreshToken') as SpotifyNowplayingStorage;
+    const { refreshToken } = (await getFromStorage(
+      "refreshToken"
+    )) as SpotifyNowplayingStorage;
     await refleshAccessToken(refreshToken);
   }
 
-  const { accessToken } = await chrome.storage.local.get('accessToken') as SpotifyNowplayingStorage;
+  const { accessToken } = (await getFromStorage(
+    "accessToken"
+  )) as SpotifyNowplayingStorage;
+
+  console.warn("access", accessToken, btoa);
   if (!accessToken) {
     return;
   }
 
-  const { item } = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-    },
-  }).then((response) => response.json()).then((data) => data);
-  if (!item) {
-    return;
+  fetchTrack(`${title} ${version} ${artists.join(" ")}`, accessToken).then(
+    (track) => {
+      console.warn("track", track);
+      temp = track;
+    }
+  );
+});
+
+chrome.action.onClicked.addListener(async () => {
+  console.warn("tempi", temp);
+  if (temp) {
+    const { accessToken } = (await getFromStorage(
+      "accessToken"
+    )) as SpotifyNowplayingStorage;
+
+    console.warn("liking");
+
+    // @ts-ignore
+    likeTrack(temp?.id, accessToken).then(console.warn);
   }
-
-  const artists = item.artists.map(({ name }: { name: string }) => name).join(', ');
-  const song = item.name;
-  const text = `${artists} - ${song}\n${item.external_urls.spotify}\n#NowPlaying`;
-  const tweetWindow = await chrome.windows.create({
-    url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
-    type: 'popup',
-    width: 550,
-    height: 450,
-  });
-
-  const tabId = tweetWindow.tabs && tweetWindow.tabs[0].id;
-  const onUpdated: Parameters<chrome.tabs.TabUpdatedEvent["addListener"]>[0] = (id, changeInfo) => {
-    if (id !== tabId) {
-      return;
-    }
-
-    if (changeInfo.status === 'loading' && changeInfo.url === `https://twitter.com/`) {
-      chrome.tabs.onUpdated.removeListener(onUpdated);
-      chrome.tabs.remove(id);
-    }
-  };
-
-  chrome.tabs.onUpdated.addListener(onUpdated);
 });
