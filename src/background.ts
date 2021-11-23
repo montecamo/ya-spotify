@@ -35,7 +35,22 @@ function likeTrack(id: string, accessToken: string): Promise<any> {
   });
 }
 
-let temp: any;
+function send(message: any) {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    chrome.tabs.sendMessage(
+      // @ts-expect-error: ok
+      tabs[0].id,
+      message
+    );
+  });
+}
+function error() {
+  send({ success: false });
+}
+function success() {
+  send({ success: true });
+}
+
 chrome.runtime.onMessage.addListener(async ({ artists, title, version }) => {
   const { expiresAt } = (await getFromStorage(
     "expiresAt"
@@ -56,29 +71,18 @@ chrome.runtime.onMessage.addListener(async ({ artists, title, version }) => {
     "accessToken"
   )) as SpotifyNowplayingStorage;
 
-  console.warn("access", accessToken, btoa);
   if (!accessToken) {
+    error();
     return;
   }
 
-  fetchTrack(`${title} ${version} ${artists.join(" ")}`, accessToken).then(
-    (track) => {
-      console.warn("track", track);
-      temp = track;
-    }
-  );
-});
-
-chrome.action.onClicked.addListener(async () => {
-  console.warn("tempi", temp);
-  if (temp) {
-    const { accessToken } = (await getFromStorage(
-      "accessToken"
-    )) as SpotifyNowplayingStorage;
-
-    console.warn("liking");
-
-    // @ts-ignore
-    likeTrack(temp?.id, accessToken).then(console.warn);
-  }
+  fetchTrack(`${title} ${version} ${artists.join(" ")}`, accessToken)
+    .then((track) => {
+      if (track) {
+        likeTrack(track.id, accessToken).then(success).catch(error);
+      } else {
+        error();
+      }
+    })
+    .catch(error);
 });

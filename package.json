@@ -7,6 +7,7 @@
   "repository": "https://github.com/hexium310/spotify-nowplaying",
   "scripts": {
     "build": "tsc --noEmit && NODE_ENV=pdoduction node --require esbuild-register scripts/build.ts",
+    "build-watch": "nodemon --watch ./ --ext '*' --exec npm run build",
     "start": "NODE_ENV=development node --require esbuild-register scripts/build.ts",
     "lint": "eslint 'src/**/*.ts'",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -20,9 +21,13 @@
     "esbuild": "^0.13.10",
     "esbuild-register": "^3.0.0",
     "eslint": "^8.1.0",
+    "nodemon": "2.0.15",
     "tsc-watch": "^4.5.0",
     "typescript": "^4.4.4",
     "webextension-polyfill-ts": "^0.26.0"
+  },
+  "nodemonConfig": {
+    "ignore": ["dist/*"]
   },
   "dependencies": {
     "spotify-web-api-js": "^1.5.2"

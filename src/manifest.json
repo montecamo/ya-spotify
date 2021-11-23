@@ -19,7 +19,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": [ "spotify.svg" ],
+      "resources": [ "spotify.svg", "spotify-red.svg", "spotify-green.svg" ],
       "matches": ["https://*/*"]
     }
   ],
