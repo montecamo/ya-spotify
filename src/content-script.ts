@@ -52,7 +52,9 @@ async function injectButton() {
   const container = document.createElement("span");
   const child = document.createElement("span");
 
-  document.container.classList.add(
+  document.getElementsByClassName("player-controls__btn-cast")[0]?.remove();
+
+  container.classList.add(
     ..."dislike player-controls__btn deco-player-controls__button dislike_theme-player spotify".split(
       " "
     )
@@ -61,7 +63,7 @@ async function injectButton() {
   child.style.backgroundImage = `url(${chrome.runtime.getURL("spotify.svg")})`;
   container.appendChild(child);
 
-  buttons.style.marginRight = "0";
+  buttons.style.marginRight = "-45px";
   buttons.appendChild(container);
 
   return container;
