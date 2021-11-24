@@ -36,3 +36,14 @@ chrome.runtime.onMessage.addListener((data) => {
     .then(sendSuccess)
     .catch(sendError);
 });
+
+chrome.action.onClicked.addListener(() => {
+  api
+    .authorize()
+    .then(() => {
+      chrome.action.setIcon({ path: "icon-128-green.png" }, () => {});
+    })
+    .catch(() => {
+      chrome.action.setIcon({ path: "icon-128-red.png" }, () => {});
+    });
+});

@@ -12,10 +12,13 @@ const isDevelopment = process.env.NODE_ENV === "development";
 
   const copyWatchers = await copyFiles(
     {
-      "src/manifest.json": "dist/manifest.json",
-      "src/spotify.svg": "dist/spotify.svg",
-      "src/spotify-red.svg": "dist/spotify-red.svg",
-      "src/spotify-green.svg": "dist/spotify-green.svg",
+      "public/manifest.json": "dist/manifest.json",
+      "public/spotify.svg": "dist/spotify.svg",
+      "public/spotify-red.svg": "dist/spotify-red.svg",
+      "public/spotify-green.svg": "dist/spotify-green.svg",
+      "public/icon-128-green.png": "dist/icon-128-green.png",
+      "public/icon-128-default.png": "dist/icon-128-default.png",
+      "public/icon-128-red.png": "dist/icon-128-red.png",
     },
     isDevelopment
   );
