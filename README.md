@@ -5,7 +5,7 @@ A Chrome extension which adds spotify like button to Yandex Music
 ## Installation
 
 1. Clone this repository and cd to it
-2. Create a Spotify app from [Spotify dashboard](https://developer.spotify.com/dashboard) and paste the client id to config.ts.
+2. Create a Spotify app from [Spotify dashboard](https://developer.spotify.com/dashboard) and paste the client id to `config.ts`.
 3. Build this project with the following command:
     ```sh
     npm i && npm run build
