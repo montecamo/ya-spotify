@@ -36,6 +36,9 @@ export function watchElement$(
   });
 }
 
-export function getElementByClass(className: string): HTMLElement | void {
-  return document.getElementsByClassName(className)[0] as HTMLElement;
+export function getElementByClass(
+  className: string,
+  parent: HTMLElement | Document = document
+): HTMLElement | void {
+  return parent.getElementsByClassName(className)[0] as HTMLElement;
 }

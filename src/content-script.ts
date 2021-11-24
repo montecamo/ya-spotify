@@ -1,5 +1,5 @@
 import { distinctUntilChanged, filter } from "rxjs/operators";
-import { watchElement$, waitElement, getElementByClass } from "./utils";
+import { watchElement$, waitElement, getElementByClass } from "~utils/dom";
 
 const BUTTON_COLORS: Record<string, string> = {
   green: chrome.runtime.getURL("spotify-green.svg"),
@@ -44,20 +44,13 @@ async function injectButton(button: HTMLElement): Promise<void> {
   buttons.appendChild(button);
 }
 
-const handleButtonClick = (e: MouseEvent): void => {
+async function handleButtonClick(e: MouseEvent): Promise<void> {
   e.preventDefault();
   e.stopImmediatePropagation();
 
-  // @ts-expect-error: ok
-  if (document.getElementsByClassName("spotify")?.style?.color) {
-    return;
-  }
+  const player = await waitElement(() => getElementByClass("track__name"));
 
-  console.warn("send");
-  const player = document.getElementsByClassName("track__name")[0];
-
-  // @ts-expect-error: ok
-  const title = player.getElementsByClassName("track__title")[0].title;
+  const title = getElementByClass("track__title", player)?.title;
   const artists = Array.from(
     player
       .getElementsByClassName("d-artists")[0]
@@ -65,16 +58,14 @@ const handleButtonClick = (e: MouseEvent): void => {
     // @ts-expect-error: ok
   ).map((a) => a.title);
 
-  const version =
-    // @ts-expect-error: ok
-    player.getElementsByClassName("track__ver")[0]?.innerText ?? "";
+  const version = getElementByClass("track__ver", player)?.innerText ?? "";
 
   chrome.runtime.sendMessage({
     title,
     artists,
     version,
   });
-};
+}
 
 watchElement$(() => getElementByClass("spotify"))
   .pipe(
@@ -88,7 +79,7 @@ watchElement$(() => getElementByClass("spotify"))
     injectButton(button);
   });
 
-chrome.runtime.onMessage.addListener(({ success }) => {
+chrome.runtime.onMessage.addListener(({ error }) => {
   const container = getElementByClass("spotify");
   if (!container) {
     return;
@@ -101,5 +92,9 @@ chrome.runtime.onMessage.addListener(({ success }) => {
 
   container.style.opacity = "1";
 
-  paintButton(button, success ? BUTTON_COLORS.green : BUTTON_COLORS.red);
+  paintButton(button, error ? BUTTON_COLORS.red : BUTTON_COLORS.green);
+
+  if (error) {
+    console.error(`Spotify extension: ${error}`);
+  }
 });

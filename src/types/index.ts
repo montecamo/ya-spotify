@@ -1,4 +1,4 @@
-export interface SpotifyNowplayingStorage {
+export interface Storage {
   userName: string;
   isPremium: boolean;
   accessToken: string;

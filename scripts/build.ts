@@ -16,17 +16,12 @@ const isDevelopment = process.env.NODE_ENV === "development";
       "src/spotify.svg": "dist/spotify.svg",
       "src/spotify-red.svg": "dist/spotify-red.svg",
       "src/spotify-green.svg": "dist/spotify-green.svg",
-      "src/options/index.html": "dist/options/index.html",
     },
     isDevelopment
   );
 
   build({
-    entryPoints: [
-      "src/background.ts",
-      "src/options/index.ts",
-      "src/content-script.ts",
-    ],
+    entryPoints: ["src/background.ts", "src/content-script.ts"],
     outdir: "dist",
     bundle: true,
     watch: isDevelopment && {
