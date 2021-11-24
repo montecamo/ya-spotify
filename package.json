@@ -27,9 +27,12 @@
     "webextension-polyfill-ts": "^0.26.0"
   },
   "nodemonConfig": {
-    "ignore": ["dist/*"]
+    "ignore": [
+      "dist/*"
+    ]
   },
   "dependencies": {
+    "rxjs": "7.4.0",
     "spotify-web-api-js": "^1.5.2"
   }
 }

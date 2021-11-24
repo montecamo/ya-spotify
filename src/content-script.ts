@@ -1,75 +1,50 @@
-function getElement(className: string): Promise<HTMLElement> {
-  const elements = document.getElementsByClassName(className);
+import { distinctUntilChanged, filter } from "rxjs/operators";
+import { watchElement$, waitElement, getElementByClass } from "./utils";
 
-  if (elements.length) {
-    return Promise.resolve(elements[0] as HTMLElement);
-  }
+const BUTTON_COLORS: Record<string, string> = {
+  green: chrome.runtime.getURL("spotify-green.svg"),
+  red: chrome.runtime.getURL("spotify-red.svg"),
+  default: chrome.runtime.getURL("spotify.svg"),
+};
 
-  return new Promise((resolve) => {
-    const observer = new MutationObserver((_, o) => {
-      const elements = document.getElementsByClassName(className);
-
-      if (elements.length) {
-        o.disconnect();
-
-        return resolve(elements[0] as HTMLElement);
-      }
-    });
-
-    observer.observe(document, { subtree: true, childList: true });
-  });
+function paintButton(button: HTMLElement, icon: string): void {
+  button.style.backgroundImage = `url(${icon})`;
 }
 
-function successButton() {
-  const container = document.getElementsByClassName("spotify")[0];
-  const button = container.children[0];
+function makeButton(): HTMLElement {
+  const classNames = [
+    "dislike",
+    "player-controls__btn",
+    "deco-player-controls__button",
+    "dislike_theme-player",
+    "spotify",
+  ];
 
-  if (button) {
-    // @ts-expect-error: ok
-    container.style.opacity = 1;
-    // @ts-expect-error: ok
-    button.style.backgroundImage = `url(${chrome.runtime.getURL(
-      "spotify-green.svg"
-    )})`;
-  }
-}
-function errorButton() {
-  const button = document.getElementsByClassName("spotify")[0];
-
-  if (button) {
-    // @ts-expect-error: ok
-    container.style.opacity = 1;
-    // @ts-expect-error: ok
-    button.style.backgroundImage = `url(${chrome.runtime.getURL(
-      "spotify-red.svg"
-    )})`;
-  }
-}
-
-async function injectButton() {
-  console.warn("injecty");
-  const buttons = await getElement("player-controls__track-controls");
   const container = document.createElement("span");
   const child = document.createElement("span");
 
-  document.getElementsByClassName("player-controls__btn-cast")[0]?.remove();
+  getElementByClass("player-controls__btn-cast")?.remove();
 
-  container.classList.add(
-    ..."dislike player-controls__btn deco-player-controls__button dislike_theme-player spotify".split(
-      " "
-    )
-  );
+  container.classList.add(...classNames);
   child.classList.add("d-icon");
-  child.style.backgroundImage = `url(${chrome.runtime.getURL("spotify.svg")})`;
-  container.appendChild(child);
 
-  buttons.style.marginRight = "-45px";
-  buttons.appendChild(container);
+  paintButton(child, BUTTON_COLORS.default);
+
+  container.appendChild(child);
 
   return container;
 }
 
-const listener = (e: any) => {
+async function injectButton(button: HTMLElement): Promise<void> {
+  const buttons = await waitElement(() =>
+    getElementByClass("player-controls__track-controls")
+  );
+
+  buttons.style.marginRight = "-45px";
+  buttons.appendChild(button);
+}
+
+const handleButtonClick = (e: MouseEvent): void => {
   e.preventDefault();
   e.stopImmediatePropagation();
 
@@ -101,24 +76,30 @@ const listener = (e: any) => {
   });
 };
 
-let injecting = false;
-const observer = new MutationObserver(() => {
-  if (document.getElementsByClassName("spotify").length === 0 && !injecting) {
-    injecting = true;
-    console.warn("inject", injecting);
-    injectButton().then((button) => {
-      button.addEventListener("click", listener);
-      injecting = false;
-    });
-  }
-});
+watchElement$(() => getElementByClass("spotify"))
+  .pipe(
+    distinctUntilChanged(),
+    filter((elem) => !elem)
+  )
+  .subscribe(() => {
+    const button = makeButton();
+    button.addEventListener("click", handleButtonClick);
 
-observer.observe(document, { subtree: true, childList: true });
+    injectButton(button);
+  });
 
 chrome.runtime.onMessage.addListener(({ success }) => {
-  if (success) {
-    successButton();
-  } else {
-    errorButton();
+  const container = getElementByClass("spotify");
+  if (!container) {
+    return;
   }
+
+  const button = container.children[0] as HTMLElement;
+  if (!button) {
+    return;
+  }
+
+  container.style.opacity = "1";
+
+  paintButton(button, success ? BUTTON_COLORS.green : BUTTON_COLORS.red);
 });

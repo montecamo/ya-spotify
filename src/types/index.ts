@@ -8,3 +8,5 @@ export interface SpotifyNowplayingStorage {
 
 export class AuthorizationError extends Error {}
 export class UnmatchStateError extends Error {}
+
+export type Selector = () => HTMLElement | void;
