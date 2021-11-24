@@ -32,14 +32,14 @@ const buildQuery = ({ artists, title, version }: any): string =>
 const buildFuzzyQuery = ({ artists, title }: any): string =>
   `${title} ${artists.join(' ')}`;
 
-function findTrack(queries: string[]): Promise<any> {
-  return api.findTrack(queries[0]).then((track) => {
-    if (!track && queries.length > 0) {
-      return findTrack(queries.slice(1));
-    }
+async function findTrack(queries: string[]): Promise<any> {
+  const track = await api.findTrack(queries[0]);
 
-    return track;
-  });
+  if (!track && queries.length > 0) {
+    return findTrack(queries.slice(1));
+  }
+
+  return track;
 }
 
 chrome.runtime.onMessage.addListener((data) => {
@@ -56,19 +56,19 @@ chrome.runtime.onMessage.addListener((data) => {
     .catch(sendError);
 });
 
-chrome.action.onClicked.addListener(() => {
-  api.isAuthorized().then((isAuthorized) => {
-    if (isAuthorized) {
-      api
-        .authorize()
-        .then(() => {
-          setExtensionIcon(GREEN_ICON);
-        })
-        .catch(() => {
-          setExtensionIcon(RED_ICON);
-        });
-    }
-  });
+chrome.action.onClicked.addListener(async () => {
+  const isAuthorized = await api.isAuthorized();
+
+  if (isAuthorized) {
+    api
+      .authorize()
+      .then(() => {
+        setExtensionIcon(GREEN_ICON);
+      })
+      .catch(() => {
+        setExtensionIcon(RED_ICON);
+      });
+  }
 });
 
 api.isAuthorized().then((isAuthorized) => {
