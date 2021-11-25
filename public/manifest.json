@@ -18,7 +18,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": [ "spotify.svg", "spotify-red.svg", "spotify-green.svg" ],
+      "resources": [ "spotify.svg", "spotify-red.svg", "spotify-green.svg", "spotify-white.svg" ],
       "matches": ["https://music.yandex.ru/*"]
     }
   ],

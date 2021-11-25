@@ -12,6 +12,7 @@ type Song = {
 const BUTTON_COLORS: Record<string, string> = {
   green: chrome.runtime.getURL('spotify-green.svg'),
   red: chrome.runtime.getURL('spotify-red.svg'),
+  white: chrome.runtime.getURL('spotify-white.svg'),
   default: chrome.runtime.getURL('spotify.svg'),
 };
 
@@ -60,7 +61,12 @@ function makeButton(): HTMLElement {
   container.classList.add(...classNames);
   child.classList.add('d-icon');
 
-  paintButton(child, BUTTON_COLORS.default);
+  paintButton(
+    child,
+    document.body.classList.contains('theme-black')
+      ? BUTTON_COLORS.white
+      : BUTTON_COLORS.default
+  );
 
   container.appendChild(child);
 
@@ -86,6 +92,19 @@ async function handleButtonClick(e: MouseEvent): Promise<void> {
   });
 }
 
+watchMutations$(() => document.body.classList.contains('theme-black'))
+  .pipe(distinctUntilChanged())
+  .subscribe((isDark) => {
+    const button = getElementByClass('spotify');
+
+    if (button?.style.opacity !== '1') {
+      paintButton(
+        // @ts-expect-error: ok
+        button.children[0],
+        isDark ? BUTTON_COLORS.white : BUTTON_COLORS.default
+      );
+    }
+  });
 watchMutations$(() => parseSong())
   .pipe(distinctUntilChanged(isEqual), filter(Boolean))
   .subscribe((song) => {

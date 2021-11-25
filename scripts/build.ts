@@ -14,6 +14,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
     {
       'public/manifest.json': 'dist/manifest.json',
       'public/spotify.svg': 'dist/spotify.svg',
+      'public/spotify-white.svg': 'dist/spotify-white.svg',
       'public/spotify-red.svg': 'dist/spotify-red.svg',
       'public/spotify-green.svg': 'dist/spotify-green.svg',
       'public/icon-128-green.png': 'dist/icon-128-green.png',
