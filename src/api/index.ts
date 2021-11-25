@@ -1,4 +1,4 @@
-import { login, refleshAccessToken } from '~utils';
+import { login, refleshAccessToken } from './auth';
 
 function getFromStorage(key: string): Promise<Record<string, string>> {
   return new Promise((resolve, reject) => {
@@ -12,14 +12,14 @@ function getFromStorage(key: string): Promise<Record<string, string>> {
   });
 }
 
-interface Api {
+interface Index {
   likeTrack(id: string): Promise<any>;
   findTrack(query: string): Promise<any>;
   authorize(): Promise<void>;
   isAuthorized(): Promise<boolean>;
 }
 
-export class SpotifyApi implements Api {
+export class SpotifyApi implements Index {
   static async refreshToken(): Promise<void> {
     const { refreshToken } = await getFromStorage('refreshToken');
 
@@ -68,6 +68,20 @@ export class SpotifyApi implements Api {
       },
       body: JSON.stringify({ ids: [id] }),
     });
+  }
+
+  async isTrackLiked(id: string): Promise<any> {
+    const accessToken = await SpotifyApi.getAccessToken();
+
+    return fetch(`https://api.spotify.com/v1/me/tracks/contains?ids=${id}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        ['Content-Type']: 'application/json',
+      },
+    })
+      .then((res) => res.json())
+      .then((res) => res[0]);
   }
 
   async findTrack(query: string): Promise<any> {
