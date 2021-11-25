@@ -1,8 +1,10 @@
-import { Observable } from "rxjs";
+import { Observable } from 'rxjs';
 
-import type { Selector } from "~types";
+type Selector<T> = () => T | void;
 
-export function waitElement(selector: Selector): Promise<HTMLElement> {
+export function waitElement(
+  selector: Selector<HTMLElement>
+): Promise<HTMLElement> {
   const elem = selector();
   if (elem) {
     return Promise.resolve(elem);
@@ -21,9 +23,9 @@ export function waitElement(selector: Selector): Promise<HTMLElement> {
   });
 }
 
-export function watchElement$(
-  selector: Selector
-): Observable<ReturnType<Selector>> {
+export function watchMutations$<T>(
+  selector: Selector<T>
+): Observable<ReturnType<Selector<T>>> {
   return new Observable((subscriber) => {
     const observer = new MutationObserver(() => {
       subscriber.next(selector());

@@ -1,5 +1,13 @@
 import { distinctUntilChanged, filter } from 'rxjs/operators';
-import { watchElement$, waitElement, getElementByClass } from '~utils/dom';
+import isEqual from 'lodash-es/isEqual';
+
+import { watchMutations$, waitElement, getElementByClass } from '~utils';
+
+type Song = {
+  title: string;
+  version: string;
+  artists: string[];
+};
 
 const BUTTON_COLORS: Record<string, string> = {
   green: chrome.runtime.getURL('spotify-green.svg'),
@@ -9,6 +17,30 @@ const BUTTON_COLORS: Record<string, string> = {
 
 function paintButton(button: HTMLElement, icon: string): void {
   button.style.backgroundImage = `url(${icon})`;
+}
+
+function parseSong(): Song | void {
+  const player = getElementByClass('track__name');
+
+  if (!player) {
+    return undefined;
+  }
+
+  const title = getElementByClass('track__title', player)?.title ?? '';
+  const artists = Array.from(
+    player
+      .getElementsByClassName('d-artists')[0]
+      .getElementsByClassName('d-link')
+    // @ts-expect-error: ok
+  ).map((a) => a.title);
+
+  const version = getElementByClass('track__ver', player)?.innerText ?? '';
+
+  return {
+    title,
+    version,
+    artists,
+  };
 }
 
 function makeButton(): HTMLElement {
@@ -48,26 +80,19 @@ async function handleButtonClick(e: MouseEvent): Promise<void> {
   e.preventDefault();
   e.stopImmediatePropagation();
 
-  const player = await waitElement(() => getElementByClass('track__name'));
-
-  const title = getElementByClass('track__title', player)?.title;
-  const artists = Array.from(
-    player
-      .getElementsByClassName('d-artists')[0]
-      .getElementsByClassName('d-link')
-    // @ts-expect-error: ok
-  ).map((a) => a.title);
-
-  const version = getElementByClass('track__ver', player)?.innerText ?? '';
-
   chrome.runtime.sendMessage({
-    title,
-    artists,
-    version,
+    type: 'like',
+    payload: parseSong(),
   });
 }
 
-watchElement$(() => getElementByClass('spotify'))
+watchMutations$(() => parseSong())
+  .pipe(distinctUntilChanged(isEqual), filter(Boolean))
+  .subscribe((song) => {
+    chrome.runtime.sendMessage({ type: 'check', payload: song });
+  });
+
+watchMutations$(() => getElementByClass('spotify'))
   .pipe(
     distinctUntilChanged(),
     filter((elem) => !elem)
@@ -79,7 +104,7 @@ watchElement$(() => getElementByClass('spotify'))
     injectButton(button);
   });
 
-chrome.runtime.onMessage.addListener(({ error }) => {
+chrome.runtime.onMessage.addListener(({ type, payload }) => {
   const container = getElementByClass('spotify');
   if (!container) {
     return;
@@ -90,11 +115,16 @@ chrome.runtime.onMessage.addListener(({ error }) => {
     return;
   }
 
-  container.style.opacity = '1';
-
-  paintButton(button, error ? BUTTON_COLORS.red : BUTTON_COLORS.green);
-
-  if (error) {
-    console.error(`Spotify extension: ${error}`);
+  switch (type) {
+    case 'error':
+      console.error(`Spotify extension: ${payload}`);
+      container.style.opacity = '1';
+      paintButton(button, BUTTON_COLORS.red);
+      break;
+    case 'isLiked':
+      if (payload) {
+        paintButton(button, BUTTON_COLORS.green);
+        container.style.opacity = '1';
+      }
   }
 });
