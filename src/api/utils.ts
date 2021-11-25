@@ -102,7 +102,7 @@ export const utils = async (
 ): Promise<TokenResponse | AuthenticationError> => {
   const redirectUri = browser.identity.getRedirectURL();
   const scope =
-    'user-read-private user-read-currently-playing user-library-modify';
+    'user-read-private user-read-currently-playing user-library-modify user-library-read';
   const state =
     Math.random().toString(36).substring(2, 15) +
     Math.random().toString(36).substring(2, 15);

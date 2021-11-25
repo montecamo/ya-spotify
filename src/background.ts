@@ -77,7 +77,7 @@ chrome.runtime.onMessage.addListener(({ type, payload }) => {
 chrome.action.onClicked.addListener(async () => {
   const isAuthorized = await api.isAuthorized();
 
-  if (isAuthorized) {
+  if (!isAuthorized) {
     api
       .authorize()
       .then(() => {
