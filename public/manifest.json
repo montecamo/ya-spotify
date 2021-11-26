@@ -8,6 +8,11 @@
     {
       "matches": ["https://music.yandex.ru/*"],
       "js": ["content.js"]
+    },
+    {
+      "matches": ["https://music.yandex.ru/*"],
+      "js": ["inject.js"],
+      "run_at": "document_end"
     }
   ],
   "background": {
@@ -18,18 +23,18 @@
   },
   "web_accessible_resources": [
     {
-      "resources": [ "spotify.svg", "spotify-red.svg", "spotify-green.svg", "spotify-white.svg" ],
+      "resources": [
+        "spotify.svg",
+        "spotify-red.svg",
+        "spotify-green.svg",
+        "spotify-white.svg",
+        "script.js"
+      ],
       "matches": ["https://music.yandex.ru/*"]
     }
   ],
-  "permissions": [
-    "identity",
-    "storage",
-    "tabs"
-  ],
-  "host_permissions": [
-    "https://accounts.spotify.com/*"
-  ],
+  "permissions": ["identity", "storage", "tabs"],
+  "host_permissions": ["https://accounts.spotify.com/*"],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   }

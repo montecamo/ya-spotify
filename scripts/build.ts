@@ -25,7 +25,12 @@ const isDevelopment = process.env.NODE_ENV === 'development';
   );
 
   build({
-    entryPoints: ['src/background.ts', 'src/content.ts'],
+    entryPoints: [
+      'src/background.ts',
+      'src/content.ts',
+      'src/inject.ts',
+      'src/script.js',
+    ],
     outdir: 'dist',
     bundle: true,
     watch: isDevelopment && {
