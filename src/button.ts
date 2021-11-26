@@ -63,7 +63,6 @@ const button$ = watchMutations$(() => getElementByClass('spotify')).pipe(
   distinctUntilChanged(),
   shareReplay(1)
 );
-const missingButton$ = button$.pipe(filter((elem) => !elem));
 const existingButton$ = button$.pipe(
   filter(Boolean)
 ) as Observable<HTMLElement>;
@@ -83,6 +82,6 @@ export {
   makeButton,
   isButtonActive,
   click$,
-  missingButton$,
+  button$,
   existingButton$,
 };

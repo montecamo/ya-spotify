@@ -7,11 +7,11 @@ import {
   makeButton,
   isButtonActive,
   existingButton$,
-  missingButton$,
   click$,
   paintButtonDefault,
   paintButtonGreen,
   paintButtonRed,
+  button$,
 } from './button';
 import { likeMessage$, errorMessage$, checkMessage$ } from './message';
 import { song$ } from './song';
@@ -40,7 +40,7 @@ song$.subscribe((song) => {
   chrome.runtime.sendMessage({ type: 'check', payload: song });
 });
 
-missingButton$.subscribe(() => {
+button$.pipe(filter((b) => !b)).subscribe(() => {
   const button = makeButton();
 
   injectButton(button);
