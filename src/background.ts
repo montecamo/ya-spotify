@@ -8,14 +8,8 @@ import { SpotifyApi } from './api';
 
 const api = new SpotifyApi();
 
-function sendMessage(message: any): void {
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    chrome.tabs.sendMessage(
-      // @ts-expect-error: ok
-      tabs[0].id,
-      message
-    );
-  });
+function sendMessage(tabId: number, message: any): void {
+  chrome.tabs.sendMessage(tabId, message);
 }
 
 const buildQuery = ({ artists, title, version }: any): string =>
@@ -38,27 +32,32 @@ async function findTrack(queries: string[]): Promise<any> {
   return track;
 }
 
-function sendError(err: Error): void {
-  sendMessage({ type: 'error', payload: err.message });
+function sendError(tabId: number, err: Error): void {
+  sendMessage(tabId, { type: 'error', payload: err.message });
 }
 
-chrome.runtime.onMessage.addListener(async ({ type, payload }) => {
+chrome.runtime.onMessage.addListener(async ({ type, payload }, { tab }) => {
+  const tabId = tab?.id;
+  if (!tabId) {
+    throw new Error('Missing tab id');
+  }
+
   switch (type) {
     case 'like':
       if (!payload) {
-        sendError(new Error('Track not found'));
+        sendError(tabId, new Error('Track not found'));
         return;
       }
 
       api
         .likeTrack(payload)
         .then(() =>
-          sendMessage({
+          sendMessage(tabId, {
             type: 'like',
             payload: { status: true },
           })
         )
-        .catch(sendError);
+        .catch((err) => sendError(tabId, err));
       break;
     case 'check': {
       const track = await findTrack([
@@ -68,7 +67,7 @@ chrome.runtime.onMessage.addListener(async ({ type, payload }) => {
 
       const liked = track ? await api.isTrackLiked(track.id) : false;
 
-      sendMessage({
+      sendMessage(tabId, {
         type: 'check',
         payload: { status: liked, trackId: track?.id },
       });
@@ -76,19 +75,19 @@ chrome.runtime.onMessage.addListener(async ({ type, payload }) => {
     }
     case 'unlike':
       if (!payload) {
-        sendError(new Error('Track not found'));
+        sendError(tabId, new Error('Track not found'));
         return;
       }
 
       api
         .unlikeTrack(payload)
         .then(() => {
-          sendMessage({
+          sendMessage(tabId, {
             type: 'like',
             payload: { status: false },
           });
         })
-        .catch(sendError);
+        .catch((err) => sendError(tabId, err));
   }
 });
 
