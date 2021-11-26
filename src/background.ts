@@ -55,7 +55,7 @@ chrome.runtime.onMessage.addListener(({ type, payload }) => {
           return track;
         })
         .then((track) => api.likeTrack(track.id))
-        .then(() => sendMessage({ type: 'isLiked', payload: true }))
+        .then(() => sendMessage({ type: 'like', payload: { status: true } }))
         .catch(sendError);
       break;
     case 'check':
@@ -68,7 +68,7 @@ chrome.runtime.onMessage.addListener(({ type, payload }) => {
           return api.isTrackLiked(track.id);
         })
         .then((isLiked) => {
-          sendMessage({ type: 'isLiked', payload: isLiked });
+          sendMessage({ type: 'check', payload: { status: isLiked } });
         })
         .catch(sendError);
   }

@@ -1,9 +1,9 @@
 import { Observable } from 'rxjs';
 
-type Selector<T> = () => T | void;
+type Selector<T> = () => T;
 
 export function waitElement(
-  selector: Selector<HTMLElement>
+  selector: Selector<HTMLElement | void>
 ): Promise<HTMLElement> {
   const elem = selector();
   if (elem) {

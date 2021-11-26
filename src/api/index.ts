@@ -70,6 +70,19 @@ export class SpotifyApi implements Index {
     });
   }
 
+  async removeTrack(id: string): Promise<any> {
+    const accessToken = await SpotifyApi.getAccessToken();
+
+    return fetch(`https://api.spotify.com/v1/me/tracks`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        ['Content-Type']: 'application/json',
+      },
+      body: JSON.stringify({ ids: [id] }),
+    });
+  }
+
   async isTrackLiked(id: string): Promise<any> {
     const accessToken = await SpotifyApi.getAccessToken();
 
