@@ -9,7 +9,6 @@ type LikeMessage = {
   type: 'like';
   payload: {
     status: boolean;
-    trackId: string;
   };
 };
 type CheckMessage = {
@@ -26,16 +25,16 @@ const message$ = new Observable<Message>((subscriber) => {
   chrome.runtime.onMessage.addListener((message) => subscriber.next(message));
 });
 
-const like$ = message$.pipe(
+const likeMessage$ = message$.pipe(
   filter(({ type }) => type === 'like')
 ) as Observable<LikeMessage>;
 
-const check$ = message$.pipe(
+const checkMessage$ = message$.pipe(
   filter(({ type }) => type === 'check')
-) as Observable<LikeMessage>;
+) as Observable<CheckMessage>;
 
-const error$ = message$.pipe(
+const errorMessage$ = message$.pipe(
   filter(({ type }) => type === 'error')
 ) as Observable<ErrorMessage>;
 
-export { like$, check$, error$ };
+export { likeMessage$, checkMessage$, errorMessage$ };
