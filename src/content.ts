@@ -1,16 +1,17 @@
-import { switchMap, merge } from 'rxjs';
-import { take, filter, map, shareReplay, withLatestFrom } from 'rxjs/operators';
+import { merge, pluck } from 'rxjs';
+import { filter, map, shareReplay, withLatestFrom } from 'rxjs/operators';
 
 import { waitElement, getElementByClass } from '~utils';
 
 import {
-  paintButton,
   makeButton,
   isButtonActive,
-  BUTTON_COLORS,
   existingButton$,
   missingButton$,
   click$,
+  paintButtonDefault,
+  paintButtonGreen,
+  paintButtonRed,
 } from './button';
 import { like$, error$, check$ } from './message';
 import { song$ } from './song';
@@ -28,13 +29,11 @@ async function injectButton(button: HTMLElement): Promise<void> {
 theme$
   .pipe(
     withLatestFrom(existingButton$),
-    filter(([, button]) => !isButtonActive(button))
+    pluck(1),
+    filter((button) => !isButtonActive(button))
   )
-  .subscribe(([theme, button]) => {
-    paintButton(
-      button,
-      theme === 'dark' ? BUTTON_COLORS.white : BUTTON_COLORS.default
-    );
+  .subscribe((button) => {
+    paintButtonDefault(button);
   });
 
 song$.subscribe((song) => {
@@ -47,7 +46,7 @@ missingButton$.subscribe(() => {
   injectButton(button);
 });
 
-click$.pipe(switchMap(() => song$.pipe(take(1)))).subscribe((song) => {
+click$.pipe(withLatestFrom(song$), pluck(1)).subscribe((song) => {
   chrome.runtime.sendMessage({
     type: 'like',
     payload: song,
@@ -59,20 +58,21 @@ error$
   .subscribe(([{ payload }, button]) => {
     console.error(`Spotify extension: ${payload}`);
 
-    paintButton(button, BUTTON_COLORS.red);
+    paintButtonRed(button);
   });
 
-merge(like$, check$)
-  .pipe(withLatestFrom(existingButton$, theme$))
-  .subscribe(([message, button, theme]) => {
-    const defaultColor =
-      theme === 'dark' ? BUTTON_COLORS.white : BUTTON_COLORS.default;
+const liked$ = merge(like$, check$).pipe(
+  map((message) => message.payload.status)
+);
 
-    paintButton(
-      button,
-      message.payload.status ? BUTTON_COLORS.green : defaultColor
-    );
-  });
+liked$.pipe(withLatestFrom(existingButton$)).subscribe(([isLiked, button]) => {
+  if (isLiked) {
+    paintButtonGreen(button);
+    return;
+  }
+
+  paintButtonDefault(button);
+});
 
 const trackId$ = like$.pipe(
   map(({ payload: { trackId } }) => trackId),

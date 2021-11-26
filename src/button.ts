@@ -22,6 +22,19 @@ function paintButton(button: HTMLElement, icon: string): void {
   button.children[0].style.backgroundImage = `url(${icon})`;
 }
 
+function paintButtonDefault(button: HTMLElement): void {
+  paintButton(
+    button,
+    getTheme() === 'dark' ? BUTTON_COLORS.white : BUTTON_COLORS.default
+  );
+}
+function paintButtonGreen(button: HTMLElement): void {
+  paintButton(button, BUTTON_COLORS.green);
+}
+function paintButtonRed(button: HTMLElement): void {
+  paintButton(button, BUTTON_COLORS.red);
+}
+
 function makeButton(): HTMLElement {
   const classNames = [
     'dislike',
@@ -41,10 +54,7 @@ function makeButton(): HTMLElement {
 
   container.appendChild(child);
 
-  paintButton(
-    container,
-    getTheme() === 'dark' ? BUTTON_COLORS.white : BUTTON_COLORS.default
-  );
+  paintButtonDefault(container);
 
   return container;
 }
@@ -67,11 +77,12 @@ const click$ = existingButton$.pipe(
 );
 
 export {
-  BUTTON_COLORS,
-  paintButton,
+  paintButtonGreen,
+  paintButtonRed,
+  paintButtonDefault,
   makeButton,
+  isButtonActive,
   click$,
   missingButton$,
   existingButton$,
-  isButtonActive,
 };
