@@ -42,33 +42,51 @@ function sendError(err: Error): void {
   sendMessage({ type: 'error', payload: err.message });
 }
 
-chrome.runtime.onMessage.addListener(({ type, payload }) => {
-  const queries = [buildQuery(payload), buildFuzzyQuery(payload)];
+chrome.runtime.onMessage.addListener(async ({ type, payload }) => {
   switch (type) {
     case 'like':
-      findTrack(queries)
-        .then((track) => {
-          if (!track) {
-            throw new Error('Track not found');
-          }
+      if (!payload) {
+        sendError(new Error('Track not found'));
+        return;
+      }
 
-          return track;
-        })
-        .then((track) => api.likeTrack(track.id))
-        .then(() => sendMessage({ type: 'like', payload: { status: true } }))
+      api
+        .likeTrack(payload)
+        .then(() =>
+          sendMessage({
+            type: 'like',
+            payload: { status: true },
+          })
+        )
         .catch(sendError);
       break;
-    case 'check':
-      findTrack(queries)
-        .then((track) => {
-          if (!track) {
-            return false;
-          }
+    case 'check': {
+      const track = await findTrack([
+        buildQuery(payload),
+        buildFuzzyQuery(payload),
+      ]);
 
-          return api.isTrackLiked(track.id);
-        })
-        .then((isLiked) => {
-          sendMessage({ type: 'check', payload: { status: isLiked } });
+      const liked = track ? await api.isTrackLiked(track.id) : false;
+
+      sendMessage({
+        type: 'check',
+        payload: { status: liked, trackId: track?.id },
+      });
+      break;
+    }
+    case 'unlike':
+      if (!payload) {
+        sendError(new Error('Track not found'));
+        return;
+      }
+
+      api
+        .unlikeTrack(payload)
+        .then(() => {
+          sendMessage({
+            type: 'like',
+            payload: { status: false },
+          });
         })
         .catch(sendError);
   }

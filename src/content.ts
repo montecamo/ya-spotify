@@ -13,7 +13,7 @@ import {
   paintButtonGreen,
   paintButtonRed,
 } from './button';
-import { like$, error$, check$ } from './message';
+import { likeMessage$, errorMessage$, checkMessage$ } from './message';
 import { song$ } from './song';
 import { theme$ } from './theme';
 
@@ -46,14 +46,7 @@ missingButton$.subscribe(() => {
   injectButton(button);
 });
 
-click$.pipe(withLatestFrom(song$), pluck(1)).subscribe((song) => {
-  chrome.runtime.sendMessage({
-    type: 'like',
-    payload: song,
-  });
-});
-
-error$
+errorMessage$
   .pipe(withLatestFrom(existingButton$))
   .subscribe(([{ payload }, button]) => {
     console.error(`Spotify extension: ${payload}`);
@@ -61,8 +54,14 @@ error$
     paintButtonRed(button);
   });
 
-const liked$ = merge(like$, check$).pipe(
-  map((message) => message.payload.status)
+const liked$ = merge(likeMessage$, checkMessage$).pipe(
+  map((message) => message.payload.status),
+  shareReplay(1)
+);
+
+const trackId$ = checkMessage$.pipe(
+  map((message) => message.payload.trackId),
+  shareReplay(1)
 );
 
 liked$.pipe(withLatestFrom(existingButton$)).subscribe(([isLiked, button]) => {
@@ -74,9 +73,13 @@ liked$.pipe(withLatestFrom(existingButton$)).subscribe(([isLiked, button]) => {
   paintButtonDefault(button);
 });
 
-const trackId$ = like$.pipe(
-  map(({ payload: { trackId } }) => trackId),
-  shareReplay()
-);
+click$
+  .pipe(withLatestFrom(trackId$, liked$))
+  .subscribe(([, trackId, liked]) => {
+    chrome.runtime.sendMessage({
+      type: liked ? 'unlike' : 'like',
+      payload: trackId,
+    });
+  });
 
 trackId$.subscribe(console.warn);
