@@ -91,7 +91,7 @@ chrome.runtime.onMessage.addListener(async ({ type, payload }, { tab }) => {
   }
 });
 
-chrome.action.onClicked.addListener(async () => {
+chrome.browserAction.onClicked.addListener(async () => {
   api
     .authorize()
     .then(() => {

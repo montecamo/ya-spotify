@@ -1,9 +1,9 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "YaSpotify",
   "description": "Yandex music spotify integration",
   "version": "1.0.0",
-  "action": {},
+  "browser_action": {},
   "content_scripts": [
     {
       "matches": ["https://music.yandex.ru/*"],
@@ -16,26 +16,19 @@
     }
   ],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"],
+    "persistent": false
   },
   "icons": {
     "128": "icon-128-default.png"
   },
   "web_accessible_resources": [
-    {
-      "resources": [
-        "spotify.svg",
-        "spotify-red.svg",
-        "spotify-green.svg",
-        "spotify-white.svg",
-        "script.js"
-      ],
-      "matches": ["https://music.yandex.ru/*"]
-    }
+      "spotify.svg",
+      "spotify-red.svg",
+      "spotify-green.svg",
+      "spotify-white.svg",
+      "script.js"
   ],
-  "permissions": ["identity", "storage", "tabs"],
-  "host_permissions": ["https://accounts.spotify.com/*"],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
-  }
+  "permissions": ["identity", "storage", "tabs", "https://accounts.spotify.com/*"],
+  "content_security_policy": "script-src 'self'; object-src 'self'"
 }
